@@ -15,44 +15,88 @@
                 });
             });
 
-            const testimonialCards = document.querySelectorAll('.testimonial-card');
-            const prevBtn = document.querySelector('.testimonial-prev');
-            const nextBtn = document.querySelector('.testimonial-next');
-            let currentTestimonial = 0;
-
-            function showTestimonial(index) {
-                testimonialCards.forEach(card => {
-                    card.classList.remove('active');
-                });
-
-                testimonialCards[index].classList.add('active');
-                currentTestimonial = index;
-            }
-
-            prevBtn.addEventListener('click', function () {
-                let newIndex = currentTestimonial - 1;
-                if (newIndex < 0) {
-                    newIndex = testimonialCards.length - 1;
-                }
-                showTestimonial(newIndex);
-            });
-
-            nextBtn.addEventListener('click', function () {
-                let newIndex = currentTestimonial + 1;
-                if (newIndex >= testimonialCards.length) {
-                    newIndex = 0;
-                }
-                showTestimonial(newIndex);
-            });
-
-            setInterval(() => {
-                let newIndex = currentTestimonial + 1;
-                if (newIndex >= testimonialCards.length) {
-                    newIndex = 0;
-                }
-                showTestimonial(newIndex);
-            }, 3000);
-
+    const testimonials = document.querySelectorAll('.testimonial-item');
+    const dots = document.querySelectorAll('.dot');
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    
+    let currentIndex = 0;
+    const testimonialCount = testimonials.length;
+    
+    function updateTestimonials() {
+        testimonials.forEach(testimonial => {
+            testimonial.classList.remove('active', 'prev', 'next');
+        });
+        
+        testimonials[currentIndex].classList.add('active');
+        
+        const prevIndex = (currentIndex - 1 + testimonialCount) % testimonialCount;
+        const nextIndex = (currentIndex + 1) % testimonialCount;
+        
+        testimonials[prevIndex].classList.add('prev');
+        testimonials[nextIndex].classList.add('next');
+        
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentIndex);
+        });
+    }
+    
+    function goToTestimonial(index) {
+        currentIndex = index;
+        updateTestimonials();
+    }
+    
+    function nextTestimonial() {
+        currentIndex = (currentIndex + 1) % testimonialCount;
+        updateTestimonials();
+    }
+    
+    function prevTestimonial() {
+        currentIndex = (currentIndex - 1 + testimonialCount) % testimonialCount;
+        updateTestimonials();
+    }
+    
+    prevBtn.addEventListener('click', prevTestimonial);
+    nextBtn.addEventListener('click', nextTestimonial);
+    
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => goToTestimonial(index));
+    });
+    
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    const testimonialsWrapper = document.querySelector('.testimonials-wrapper');
+    
+    testimonialsWrapper.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    testimonialsWrapper.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) {
+            nextTestimonial();
+        }
+        if (touchEndX > touchStartX + 50) {
+            prevTestimonial();
+        }
+    }
+    
+    let autoplayInterval = setInterval(nextTestimonial, 5000);
+    
+    testimonialsWrapper.addEventListener('mouseenter', () => {
+        clearInterval(autoplayInterval);
+    });
+    
+    testimonialsWrapper.addEventListener('mouseleave', () => {
+        autoplayInterval = setInterval(nextTestimonial, 5000);
+    });
+    
+    updateTestimonials();
             const header = document.querySelector('.header');
             window.addEventListener('scroll', function () {
                 if (window.scrollY > 100) {
